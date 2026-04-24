@@ -306,7 +306,7 @@ Cron jobs that need to exec commands (run scripts, touch files, call local APIs)
   "schedule": { "kind": "cron", "expr": "0 3,15 * * *", "tz": "America/New_York" },
   "payload": {
     "kind": "agentTurn",
-    "message": "Run /home/clawdbot/.openclaw/workspace/scripts/backup-restic.sh and report status.",
+    "message": "Run ~/.openclaw/workspace/scripts/backup-restic.sh and report status.",
     "model": "openai-codex/gpt-5.4:cron"
   },
   "elevated": true,
