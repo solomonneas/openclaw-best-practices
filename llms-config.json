@@ -1,0 +1,47 @@
+{
+  "project": "openclaw-best-practices",
+  "tagline": "Agent-facing context for the openclaw-best-practices repo.",
+  "canonical": "./llms-full.txt",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "title": "Agent operating guide",
+      "summary": "Bootstrap instructions and repo-specific operating rules."
+    },
+    {
+      "path": "README.md",
+      "title": "README",
+      "summary": "High-level project overview and usage notes."
+    },
+    {
+      "path": "configuration/multi-model-orchestration.md",
+      "title": "Multi model orchestration",
+      "summary": "Supporting project documentation."
+    },
+    {
+      "path": "security/agent-security-hardening.md",
+      "title": "Agent security hardening",
+      "summary": "Supporting project documentation."
+    },
+    {
+      "path": "workflows/sub-agent-patterns.md",
+      "title": "Sub agent patterns",
+      "summary": "Supporting project documentation."
+    },
+    {
+      "path": "workflows/session-management.md",
+      "title": "Session management",
+      "summary": "Supporting project documentation."
+    },
+    {
+      "path": "workflows/cross-lane-handoffs.md",
+      "title": "Cross lane handoffs",
+      "summary": "Structured task-state handoffs between agent lanes."
+    },
+    {
+      "path": "workflows/design-contracts.md",
+      "title": "DESIGN.md frontend contracts",
+      "summary": "How to use DESIGN.md and templates as the visual contract for frontend work."
+    }
+  ]
+}

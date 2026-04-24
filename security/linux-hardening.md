@@ -37,7 +37,7 @@ sudo ufw enable
 
 ### Rule Set
 
-Replace `<LAN_SUBNET_CIDR>` with your LAN subnet. Replace `<HOST_LAN_IP>` with your host's LAN IP.
+Replace `<LAN_SUBNET_CIDR>` with your LAN subnet and `<HOST_LAN_IP>` with your host's LAN IP.
 
 ```bash
 # SSH - LAN only

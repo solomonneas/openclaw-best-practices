@@ -49,7 +49,7 @@ The `tar + gpg` pattern in the previous version of this guide works but has two 
 
 ### Twice-Daily Backup to Two Destinations
 
-We run restic twice daily (3am and 3pm) with two destinations: Google Drive (via rclone) and a local NAS (`/mnt/nas/backups/openclaw-restic`). Losing one doesn't lose the other.
+We run restic twice daily (3am and 3pm) with two destinations: Google Drive (via rclone) and a local NAS (`<NAS_MOUNT>/backups/openclaw-restic`). Losing one doesn't lose the other.
 
 ```bash
 #!/bin/bash
@@ -75,9 +75,9 @@ restic -r rclone:gdrive:openclaw-restic backup "${PATHS[@]}" --tag auto
 restic -r rclone:gdrive:openclaw-restic forget --tag auto --keep-daily 14 --keep-weekly 8 --keep-monthly 6 --prune
 
 # Destination 2: local NAS
-if mountpoint -q /mnt/nas; then
-  restic -r /mnt/nas/backups/openclaw-restic backup "${PATHS[@]}" --tag auto
-  restic -r /mnt/nas/backups/openclaw-restic forget --tag auto --keep-daily 14 --keep-weekly 8 --keep-monthly 6 --prune
+if mountpoint -q <NAS_MOUNT>; then
+  restic -r <NAS_MOUNT>/backups/openclaw-restic backup "${PATHS[@]}" --tag auto
+  restic -r <NAS_MOUNT>/backups/openclaw-restic forget --tag auto --keep-daily 14 --keep-weekly 8 --keep-monthly 6 --prune
 else
   echo "WARN: NAS not mounted, skipping local backup" >&2
 fi
@@ -96,7 +96,7 @@ Store this passphrase somewhere outside your machine (password manager, printed 
 
 ```bash
 restic -r rclone:gdrive:openclaw-restic init
-restic -r /mnt/nas/backups/openclaw-restic init
+restic -r <NAS_MOUNT>/backups/openclaw-restic init
 ```
 
 ### Schedule the Backup
@@ -129,11 +129,11 @@ Or use an OpenClaw cron job to verify the backup ran:
 
 ### Local NAS (Primary)
 
-Fast restores and large backups. We use an SMB NAS mounted at `/mnt/nas` via fstab automount with guest access. The NAS is the household storage tier; the OpenClaw backup pool sits alongside unrelated data, so treat it as shared infrastructure.
+Fast restores and large backups. We use an SMB NAS mounted at `<NAS_MOUNT>` via fstab automount with guest access. Keep the mount read-only by default if the share holds anything more important than backup data.
 
 ```bash
 # fstab entry (automount on demand)
-//<NAS_HOST>/backups /mnt/nas cifs guest,vers=3.0,_netdev,noauto,x-systemd.automount 0 0
+//<NAS_HOST>/backups <NAS_MOUNT> cifs guest,vers=3.0,_netdev,noauto,x-systemd.automount 0 0
 ```
 
 Rule we enforce locally: **NAS is read-only by default.** The only process allowed to write is `backup-restic.sh`. This prevents an agent from accidentally modifying or deleting the irreplaceable photo archive while exploring the mount.
@@ -166,11 +166,11 @@ A backup you've never restored from is a backup that doesn't exist. Test quarter
 export RESTIC_PASSWORD_FILE=/root/.restic-passphrase
 
 # 1. List available snapshots (from either destination)
-restic -r /mnt/nas/backups/openclaw-restic snapshots
+restic -r <NAS_MOUNT>/backups/openclaw-restic snapshots
 # Pick a snapshot ID to restore from
 
 # 2. Restore to a temp location for inspection
-restic -r /mnt/nas/backups/openclaw-restic restore <SNAPSHOT_ID> --target /tmp/restore-test
+restic -r <NAS_MOUNT>/backups/openclaw-restic restore <SNAPSHOT_ID> --target /tmp/restore-test
 
 # 3. Verify contents
 ls -la /tmp/restore-test/home/*/.openclaw/
@@ -195,7 +195,7 @@ One restic advantage: browse old snapshots like a filesystem without pulling any
 
 ```bash
 mkdir -p /tmp/snap-mount
-restic -r /mnt/nas/backups/openclaw-restic mount /tmp/snap-mount &
+restic -r <NAS_MOUNT>/backups/openclaw-restic mount /tmp/snap-mount &
 ls /tmp/snap-mount/snapshots/
 # Navigate and read any historical file, then:
 fusermount -u /tmp/snap-mount
@@ -262,7 +262,7 @@ sqlite3 /path/to/database.db ".backup /path/to/backups/database-$(date +%Y-%m-%d
 export RESTIC_PASSWORD_FILE=/root/.restic-passphrase
 
 echo "=== Latest Snapshot (NAS) ==="
-restic -r /mnt/nas/backups/openclaw-restic snapshots --latest 1 2>/dev/null || echo "✗ NAS repo unavailable"
+restic -r <NAS_MOUNT>/backups/openclaw-restic snapshots --latest 1 2>/dev/null || echo "✗ NAS repo unavailable"
 
 echo ""
 echo "=== Latest Snapshot (rclone:gdrive) ==="
@@ -278,7 +278,7 @@ crontab -l 2>/dev/null | grep backup-restic || echo "✗ No backup cron found"
 
 echo ""
 echo "=== Repo Integrity (fast check) ==="
-restic -r /mnt/nas/backups/openclaw-restic check --read-data-subset=1% 2>/dev/null | tail -5
+restic -r <NAS_MOUNT>/backups/openclaw-restic check --read-data-subset=1% 2>/dev/null | tail -5
 ```
 
 ## Gotchas
@@ -297,4 +297,4 @@ restic -r /mnt/nas/backups/openclaw-restic check --read-data-subset=1% 2>/dev/nu
 
 7. **Back up OAuth state files, not just OpenClaw config.** `~/.codex/auth.json` and `~/.claude/` (ACP session state) aren't in `~/.openclaw/`, but losing them means re-authenticating every subscription after a restore. Include them in your backup paths.
 
-8. **The agent can write to the NAS if you let it.** We enforce read-only-by-default on `/mnt/nas` via mount options, and the only writer is `backup-restic.sh`. If an agent ever gets a writable NAS mount, assume it will eventually touch files it shouldn't. The photos on that NAS are irreplaceable — the mount policy is deliberate, not paranoid.
+8. **The agent can write to the NAS if you let it.** We enforce read-only-by-default on `<NAS_MOUNT>` via mount options, and the only writer should be the backup script. If an agent ever gets a writable NAS mount, assume it will eventually touch files it shouldn't. The photos on that NAS are irreplaceable — the mount policy is deliberate, not paranoid.

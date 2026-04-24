@@ -1,21 +1,41 @@
 # 🦞 OpenClaw Best Practices
 
+## Agent Entry
+
+Agents entering this repo should read `AGENTS.md` first, then the core source docs in `llms-config.json`, then `llms.txt` or `llms-full.txt`.
+
+`INSTALL_FOR_AGENTS.md` exists as the explicit bootstrap path for agent install flows.
+
 Practical guides for running [OpenClaw](https://github.com/openclaw/openclaw) in production. Security hardening, infrastructure patterns, agent orchestration, and operational runbooks from real deployments.
 
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Linux-blue)
-![Guides](https://img.shields.io/badge/guides-19-red)
-![Last Updated](https://img.shields.io/badge/updated-2026--04--23-white)
+![Guides](https://img.shields.io/badge/guides-21-red)
+![Last Updated](https://img.shields.io/badge/updated-2026--04--24-white)
 
 > 🦞 No fluff. No theory without implementation. Every guide documents what was actually deployed, how to verify it, and what broke along the way.
+
+## Start Here
+
+If you're setting up a serious OpenClaw deployment, read these first in order:
+
+1. [Multi-Model Orchestration](configuration/multi-model-orchestration.md)
+2. [Linux Hardening](security/linux-hardening.md) or [WSL2 Hardening](security/wsl-hardening.md)
+3. [Gateway Exposure Hardening](security/gateway-exposure-hardening.md)
+4. [Secrets and File Permissions](security/secrets-and-permissions.md)
+5. [Sub-Agent Patterns](workflows/sub-agent-patterns.md)
+6. [Cross-Lane Handoffs](workflows/cross-lane-handoffs.md)
+7. [DESIGN.md as a Frontend Contract](workflows/design-contracts.md)
+8. [Cron Job Patterns](workflows/cron-patterns.md)
+9. [Upgrade & Drift Checklist](infrastructure/upgrade-and-drift-checklist.md)
 
 ## Recommended Provider Stack
 
 The guides assume a specific provider mix. You can substitute, but if you want a known-good baseline:
 
-- **Codex Pro ($200/mo) OAuth — main agent + coder.** This is the happy path. One flat subscription covers orchestration, code generation, and most cron work. Codex OAuth slots cleanly into OpenClaw's primary-model path and has been the most stable surface across the 2026.4.x releases. Start here.
-- **Claude Opus 4.6 via ACP — escalation only.** Resume, intel, design, review, humanize, academic work. Run it through the ACPX plugin, not as a direct OpenClaw provider.
-- **Ollama (free) — embeddings, commit messages, triage.** Local, fast, no round-trip.
+- **Codex Pro ($200/mo) OAuth, main agent + coder.** This is the happy path. One flat subscription covers orchestration, code generation, and most cron work. Codex OAuth slots cleanly into OpenClaw's primary-model path and has been the most stable surface across the 2026.4.x releases. Start here.
+- **Claude Opus 4.6 via ACP, escalation only.** Resume, intel, design, review, humanize, academic work. Run it through the ACPX plugin, not as a direct OpenClaw provider.
+- **Ollama (free), embeddings, commit messages, triage.** Local, fast, no round-trip.
 
 ### ⚠️ Do not route Claude Max OAuth directly through OpenClaw
 
@@ -24,7 +44,7 @@ As of April 2026, pointing an OpenClaw agent at your Claude Max subscription OAu
 1. **Extra usage charges.** Anthropic started metering traffic that arrives through third-party harnesses against your subscription in ways that show up as additional usage on top of normal Max caps. You can burn through quota far faster than the same work would cost through the first-party Claude client.
 2. **System-prompt-level blocking.** Claude detects that it's running inside a non-Anthropic harness and injects guidance that degrades behavior (refusals, hedging, dropping tool calls). Prompt-level workarounds don't stick.
 
-**The only sensible path to Opus from OpenClaw is ACP.** The ACPX plugin launches the official Claude Code CLI as a subprocess — Anthropic's own client handles the OAuth handshake, so the usage accounting and system-prompt behavior stay normal. OpenClaw connects to it over the Agent Client Protocol and treats the session as an escalation sub-agent.
+**The only sensible path to Opus from OpenClaw is ACP.** The ACPX plugin launches the official Claude Code CLI as a subprocess. Anthropic's own client handles the OAuth handshake, so the usage accounting and system-prompt behavior stay normal. OpenClaw connects to it over the Agent Client Protocol and treats the session as an escalation sub-agent.
 
 Full migration runbook in [claude-cli → ACP Migration](configuration/claude-cli-to-acp-migration.md).
 
@@ -37,6 +57,8 @@ Full migration runbook in [claude-cli → ACP Migration](configuration/claude-cl
 | [Linux Hardening](security/linux-hardening.md) | UFW, SSH hardening, fail2ban, service binding, and defense-in-depth for an OpenClaw host | Ubuntu 24.04 |
 | [WSL2 Hardening](security/wsl-hardening.md) | Windows Firewall, RDP/SSH/SMB lockdown, port proxy hygiene, sleep prevention, and dual-OS defense | Windows 11 + WSL2 |
 | [Agent Security](security/agent-security-hardening.md) | API gateway isolation, RBAC, sandboxing, circuit breakers, and a real post-mortem from a sub-agent nuking a database | Any |
+| [Gateway Exposure Hardening](security/gateway-exposure-hardening.md) | Explicit Control UI origins, auth rate limiting, and safer LAN-bound gateway exposure | Any |
+| [Secrets and File Permissions](security/secrets-and-permissions.md) | Secret hygiene, file modes, rotation workflow, and documentation-safe patterns | Any |
 
 ### Infrastructure
 
@@ -44,6 +66,7 @@ Full migration runbook in [claude-cli → ACP Migration](configuration/claude-cl
 |-------|-------------|----------|
 | [Backup & Recovery](infrastructure/backup-recovery.md) | Restic to NAS + Google Drive, twice-daily schedule, snapshot mounts, and disaster recovery | Any |
 | [Upgrade Hygiene](infrastructure/upgrade-hygiene.md) | Surviving `openclaw update`: systemd regeneration, dist patches, OAuth sync, schema drift | Any |
+| [Upgrade & Drift Checklist](infrastructure/upgrade-and-drift-checklist.md) | Post-upgrade verification for plugins, env injection, gateway hardening, channels, and cron jobs | Any |
 
 ### Configuration
 
@@ -63,17 +86,30 @@ Full migration runbook in [claude-cli → ACP Migration](configuration/claude-cl
 | Guide | Description | Platform |
 |-------|-------------|----------|
 | [Sub-Agent Patterns](workflows/sub-agent-patterns.md) | Spawn patterns, model assignment, ACP escalation, error handling, and the wrapper script | Any |
+| [Cross-Lane Handoffs](workflows/cross-lane-handoffs.md) | Move work between OpenClaw, Codex, and review lanes without losing task state | Any |
+| [DESIGN.md as a Frontend Contract](workflows/design-contracts.md) | Use `DESIGN.md` as the visual contract for agent-driven frontend work | Any |
 | [Cron Job Patterns](workflows/cron-patterns.md) | Scheduling, heartbeat batching, thinking-budget aliases, explicit delivery routing, and quiet hours | Any |
+| [Claude Memory Handoffs](workflows/claude-memory-handoffs.md) | Route durable findings from Claude Code back into OpenClaw's canonical memory flow | Any |
 | [Multi-Channel Setup](workflows/multi-channel-setup.md) | Discord, Telegram, Signal routing, session isolation, ACP threads, and access control | Any |
 | [Self-Improving Agents](workflows/self-improving-agents.md) | Correction capture, behavioral-guard plugins (tool-narration-guard, tokenjuice), daily memory sweeps, promotion rules | Any |
 | [Session Management](workflows/session-management.md) | Why single-chat apps bottleneck your agent, Discord channel layouts, cron isolation, and the hybrid approach | Any |
 | [GPT 5.4 Orchestration](workflows/gpt-54-orchestration.md) | Tool-call narration guard, strict-agentic detection gaps, silent-tool-loop triage, action-verb tuning | Any |
 
+## Templates
+
+Reusable starters live in [`templates/`](templates/):
+
+- [`templates/DESIGN.md`](templates/DESIGN.md)
+- [`templates/AGENTS.md`](templates/AGENTS.md)
+- [`templates/cross-lane-handoff.md`](templates/cross-lane-handoff.md)
+- [`templates/memory-handoff.md`](templates/memory-handoff.md)
+- [`templates/frontend-variant-request.md`](templates/frontend-variant-request.md)
+
 ## Who This Is For
 
 Engineers running OpenClaw on real infrastructure: bare metal, VPS, homelab, or enterprise. If you're managing an always-on AI agent that has access to your systems, you need to lock it down properly. These guides assume you're comfortable with Linux administration and want actionable steps, not blog posts.
 
-> 🦞 *Built by an engineer who runs OpenClaw 24/7 on bare metal and broke everything at least once so you don't have to.*
+> 🦞 *Built by an engineer who runs OpenClaw 24/7 on bare metal and broke everything at least once so you do not have to.*
 
 ## Guide Format
 

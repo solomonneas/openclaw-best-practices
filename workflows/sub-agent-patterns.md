@@ -106,7 +106,7 @@ agent-wrapper.sh "dashboard build" claude --dangerously-skip-permissions -p "Bui
       {
         "id": "acp-claude",
         "model": "acpx/claude-opus-4-6",
-        "description": "Escalation target — resume, intel, design, review, humanize, academic work"
+        "description": "Escalation target for resume, intel, design, review, humanize, and academic work"
       }
     ]
   }
@@ -115,7 +115,7 @@ agent-wrapper.sh "dashboard build" claude --dangerously-skip-permissions -p "Bui
 
 `gpt54` is an alias defined in `agents.defaults.models` that resolves to `openai-codex/gpt-5.4`. See [multi-model orchestration](../configuration/multi-model-orchestration.md) for the full alias setup.
 
-Research and imagegen are not separate agents in this setup — they're skills the main/coder invoke against the [browser-LLM stack](../configuration/multi-model-orchestration.md#tier-3-browser-llm-stack--playwright--novnc).
+Research and imagegen are not separate agents in this setup. They're skills the main/coder invoke against the [browser-LLM stack](../configuration/multi-model-orchestration.md).
 
 ### Assignment Rules
 
@@ -247,7 +247,7 @@ sessions_spawn(
 Or open a dedicated Discord thread routed to `acp-claude` (see [multi-channel setup](multi-channel-setup.md)) and work with Opus directly. The ACP session has no access to your main agent's conversation history — pass all necessary context in the task itself.
 
 **When to escalate:** Resume, intel, design, PR review that needs taste, humanize passes, academic work.
-**When NOT to escalate:** Code generation, file scanning, bulk ops, anything mechanical. The coder agent (GPT 5.4) handles those faster and without burning Max-subscription quota.
+**When NOT to escalate:** Code generation, file scanning, bulk ops, or anything mechanical. The coder agent (GPT 5.4) handles those faster and without burning Max-subscription quota.
 
 ## Verification
 
